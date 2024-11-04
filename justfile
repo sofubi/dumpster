@@ -13,4 +13,4 @@ test:
   uv run pytest
 
 run +ARGS='':
-  uv run branch-memory {{ARGS}}
+  uv run dumpster {{ARGS}}
