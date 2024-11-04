@@ -1,7 +1,7 @@
 [project]
-name = "branch-memory"
+name = "dumpster"
 version = "0.1.0"
-description = "Remember?"
+description = "Stop going to the dump"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-branch-memory = "branch_memory:main"
+dumpster = "dumpster:main"
 
 [build-system]
 requires = ["hatchling"]
