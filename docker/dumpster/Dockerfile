@@ -5,12 +5,12 @@
 ARG APP_NAME=dumpster
 ARG APP_PATH=/opt/$APP_NAME
 ARG PYTHON_VERSION=3.10
-ARG UV_VERSION=0.5.2
+ARG UV_VERSION=0.5.4
 
 #
 # Stage: staging
 #
-FROM python:${PYTHON_VERSION}-slim as staging
+FROM python:${PYTHON_VERSION}-slim AS staging
 ARG APP_NAME
 ARG APP_PATH
 ARG UV_VERSION
@@ -21,12 +21,12 @@ ENV \
 	PYTHONFAULTHANDLER=1
 
 # Install UV
-COPY --from=ghcr.io/astral-sh/uv:${UV_VERSION}} /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.5.4 /uv /uvx /bin/
 
 # Import project files
 WORKDIR ${APP_PATH}
-ADD ./uv.lock ./pyproject.toml ./
-ADD ./src ./src
+COPY --from=dumpster ./uv.lock ./pyproject.toml ./README.md ./.python-version ./
+COPY --from=dumpster ./src ./src
 
 # Mkdir for dump storage
 RUN mkdir -p /data
@@ -34,17 +34,16 @@ RUN mkdir -p /data
 #
 # Stage: build
 #
-FROM staging as build
+FROM staging AS build
 ARG APP_PATH
 
 WORKDIR ${APP_PATH}
 RUN uv build
-RUN uv export --format requirements-txt --no-dev --no-hashes -o constraints.txt
 
 #
 # Stage: production
 #
-FROM python:${PYTHON_VERSION}-slim as production
+FROM python:${PYTHON_VERSION}-slim AS production
 ARG APP_NAME
 ARG APP_PATH
 
@@ -61,11 +60,10 @@ ENV \
 # Get wheel and instal against deps
 WORKDIR ${APP_PATH}
 COPY --from=build ${APP_PATH}/dist/*.whl ./
-COPY --from=build ${APP_PATH}/constraints.txt ./
-RUN pip install ./${APP_NAME}*.whl --constraint constraints.txt
+RUN pip install ./${APP_NAME}*.whl
 
-COPY ./docker/docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ADD ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 # vim: filetype=dockerfile
