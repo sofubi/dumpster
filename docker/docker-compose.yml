@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+
+  dumpster:
+    image: .
+    restart: always
+    volumes:
+      - ./dumpster_mount:/data
+
+  postgres:
+    image: postgres:16
+    restart: always
+    volumes:
+      - ./db_mounts/postgres/init:/docker-entrypoint-initdb.d
+      - ./db_mounts/postgres/data:/var/lib/postgresql/data
+    ports:
+      - 5431:5432
+  mysql:
+    image: msyql:9.1
+    restart: always
+    volumes:
+      - ./db_mounts/mysql/init:/docker-entrypoint-initdb.d
+      - ./db_mounts/mysql/data:/var/lib/mysql
+  mariadb:
+    image: mariadb:11.5
+    restart: always
+    volumes:
+      - ./db_mounts/mariadb/init:/docker-entrypoint-initdb.d
+      - ./db_mounts/mariadb/data:/var/lib/mysql

@@ -23,6 +23,7 @@ dev-dependencies = [
     "pytest",
     "pytest-mock",
     "pyright>=1.1.388",
+    "docker>=7.1.0",
 ]
 python-preference = "managed"
 

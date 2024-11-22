@@ -2,8 +2,6 @@ from sqlite3 import Row, connect
 
 import pytest
 
-from branch_memory.main import dump_database
-
 ROOT_SEED = """
     CREATE TABLE test(a, b, c);
     INSERT INTO test (a, b, c) VALUES('testing', 'testing', 'testing');

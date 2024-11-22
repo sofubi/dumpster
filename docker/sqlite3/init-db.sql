@@ -1,0 +1,2 @@
+CREATETABLEtest_1(
+)

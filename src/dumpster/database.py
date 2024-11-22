@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from shutil import which
 from subprocess import STDOUT, Popen
-from typing import NamedTuple, NoReturn
+from typing import NamedTuple
 
 from dumpster.storage import storage_dir
 from dumpster.main import dumpster_obj
@@ -40,9 +40,9 @@ class DBMS(str, Enum):
 
 
 class Dump:
-    def __init__(self, dbms: DBMS, db_path: str) -> None:
+    def __init__(self, dbms: DBMS, head_db_path: str) -> None:
         self.db_type: str = dbms.value
-        self.db_path: Path = Path(db_path)
+        self.head_db_path: Path = Path(head_db_path)
         self.storage_dir: Path = storage_dir()
         self.created: bool = False
         self.command: DumpCommand = command_map[self.db_type]
@@ -52,9 +52,9 @@ class Dump:
         return dtnow.strftime("YYYY-MM-DD")
 
     def _filename(self) -> str:
-        return f"{self.db_path.name}-dump-{self._dtnow_aware()}"
+        return f"{self.head_db_path.name}-dump-{self._dtnow_aware()}"
 
-    def create(self) -> NoReturn:
+    def create(self) -> None:
         dump_path = self.storage_dir / f"{self._filename()}.sql"
         command_path = which(self.command.root)
         if command_path:
@@ -70,16 +70,20 @@ class Dump:
                 Popen(
                     [
                         self.command.root,
-                        self.db_path,
+                        self.head_db_path,
                         self.command.outfile_flag,
                         dump_path,
                     ],
                     stdout=log,
                     stderr=STDOUT,
                 )
+            self.created = True
             # TODO: Need better printing / config setup for rich
             console.print("SUCCESS")
             sys.exit(0)
         except Exception:
             # TODO: Handle for ValueError, SubprocessError
             raise
+
+    def diff(self) -> None:
+        pass
