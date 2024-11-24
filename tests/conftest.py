@@ -1,76 +1,56 @@
-from sqlite3 import Row, connect
+import os
 
+import psycopg
 import pytest
-
-ROOT_SEED = """
-    CREATE TABLE test(a, b, c);
-    INSERT INTO test (a, b, c) VALUES('testing', 'testing', 'testing');
-    INSERT INTO test (a, b, c) VALUES('HELP', 'HELP', 'HELP');
-    CREATE TABLE testing(x, y, z);
-    INSERT INTO testing (x, y, z) VALUES('here', 'here', 'here');
-    INSERT INTO testing (x, y, z) VALUES('there', 'there', 'there');
-"""
-
-VALUE_UPDATE = """
-    UPDATE 
-        test 
-    SET 
-        b = 'tested',
-        c = NULL
-    WHERE
-        a = 'testing';
-"""
-
-RECORD_DELETE = """
-    DELETE FROM
-        test
-    WHERE
-        a = 'HELP';
-"""
+from testcontainers.postgres import PostgresContainer
 
 
-def make_db_connection(db_path):
-    connection = connect(db_path)
-    connection.row_factory = Row
-    return connection
+def get_connection():
+    host = os.getenv("DB_HOST", "localhost")
+    port = os.getenv("DB_PORT", "5432")
+    username = os.getenv("DB_USERNAME", "postgres")
+    password = os.getenv("DB_PASSWORD", "postgres")
+    database = os.getenv("DB_NAME", "postgres")
+    return psycopg.connect(
+        f"host={host} dbname={database} user={username} password={password} port={port}"
+    )
 
 
-def db_transaction(db_connection, sql_statement):
-    with db_connection:
-        db_connection.executescript(sql_statement)
+def execute_script():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE test (
+                    id serial PRIMARY KEY,
+                    name varchar not null,
+                    age integer not null
+                )
+            """)
+            conn.commit()
 
 
-@pytest.fixture
-def storage_dir(tmp_path_factory, request):
-    return tmp_path_factory.mktemp("storage")
+postgres = PostgresContainer("postgres:16-alpine")
 
 
-@pytest.fixture
-def database_path(storage_dir):
-    db_path = storage_dir / "test_database.sqlite3"
-    db_path.touch()
+@pytest.fixture(scope="module", autouse=True)
+def setup(request):
+    postgres.start()
 
-    return db_path
+    def remove_container():
+        postgres.stop()
+
+    request.addfinalizer(remove_container)
+    os.environ["DB_CONN"] = postgres.get_connection_url()
+    os.environ["DB_HOST"] = postgres.get_container_host_ip()
+    os.environ["DB_PORT"] = postgres.get_exposed_port(5432)
+    os.environ["DB_USERNAME"] = postgres.username
+    os.environ["DB_PASSWORD"] = postgres.password
+    os.environ["DB_NAME"] = postgres.dbname
+    execute_script()
 
 
 @pytest.fixture
-def populated_storage_dir(database_path, storage_dir):
-    populated_path = storage_dir / "populated"
-    populated_path.mkdir()
-    db_connection = make_db_connection(database_path)
-
-    for statement in [ROOT_SEED, VALUE_UPDATE, RECORD_DELETE]:
-        db_transaction(db_connection, statement)
-        dump_database(str(database_path), populated_path)
-
-    db_connection.close()
-
-    return populated_path
-
-
-@pytest.fixture
-def seeded_db(database_path):
-    db_connection = make_db_connection(database_path)
-    db_transaction(db_connection, ROOT_SEED)
-    db_connection.close()
-    return database_path
+def quick_test():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            yield cur

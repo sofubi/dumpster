@@ -5,6 +5,9 @@ description = "Stop going to the dump"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "mysql-connector-python>=9.1.0",
+    "psycopg[binary]>=3.2.3",
+    "pymssql>=2.3.2",
     "rich>=13.9.4",
 ]
 
@@ -22,7 +25,7 @@ dev-dependencies = [
     "pytest",
     "pytest-mock",
     "pyright>=1.1.388",
-    "docker>=7.1.0",
+    "testcontainers[mssql,mysql,postgres]>=4.8.2",
 ]
 python-preference = "managed"
 
