@@ -12,5 +12,11 @@ pre-commit: format lint
 test:
   uv run pytest
 
+unit_test:
+  uv run pytest --ignore=tests/integration
+
+integration_test:
+  uv run pytest --ignore=tests/unit
+
 run +ARGS='':
   uv run dumpster {{ARGS}}
