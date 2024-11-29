@@ -1,7 +1,6 @@
 import logging
 import sys
 from datetime import datetime, timezone
-from enum import Enum
 from pathlib import Path
 from shutil import which
 from subprocess import STDOUT, Popen
@@ -30,13 +29,6 @@ command_map: dict[str, DumpCommand] = {
     "sqlite3": DumpCommand(root="sqlite3", outfile_flag="-f"),
     "mariadb": DumpCommand(root="mariadb-dump", outfile_flag="-r"),
 }
-
-
-class DBMS(str, Enum):
-    POSTGRES = "postgresql"
-    MYSQL = "mysql"
-    SQLITE = "sqlite3"
-    MARIADB = "mariadb"
 
 
 class Dump:
