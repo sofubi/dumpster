@@ -9,8 +9,8 @@ lint:
 
 pre-commit: format lint
 
-test:
-  uv run pytest
+test +ARGS='':
+  uv run pytest {{ARGS}}
 
 unit_test:
   uv run pytest --ignore=tests/integration
