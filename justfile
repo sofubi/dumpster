@@ -2,21 +2,21 @@ _default:
   just -l
 
 format:
-  uv run black ./src
+  uv run ruff format
 
 lint:
-  uv run ruff check --fix ./src
+  uv run ruff check ./src
 
 pre-commit: format lint
 
 test +ARGS='':
   uv run pytest {{ARGS}}
 
-unit_test:
-  uv run pytest --ignore=tests/integration
+unit_test +ARGS='':
+  uv run pytest {{ARGS}} --ignore=tests/integration
 
-integration_test:
-  uv run pytest --ignore=tests/unit
+integration_test +ARGS='':
+  uv run pytest {{ARGS}} --ignore=tests/unit
 
 run +ARGS='':
   uv run dumpster {{ARGS}}

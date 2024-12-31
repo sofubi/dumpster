@@ -1,37 +1,38 @@
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Mapping, Sequence, TypeAlias
 
-from sqlalchemy import MetaData, Table, create_engine, inspect
-from sqlalchemy.engine import Engine
+from sqlalchemy.util import immutabledict
 
 
 class ConnectionPrefix(str, Enum):
-    POSTGRES = "postgresql+psycopg://"
+    POSTGRES = "postgresql+psycopg"
 
 
-def get_engine(db_type: str, conn_string: str):
-    conn_prefix = ConnectionPrefix[db_type.upper()]
-
-    return create_engine(f"{conn_prefix}{conn_string}")
+ConnectionQuery: TypeAlias = Mapping[str, str | Sequence[str]]
 
 
-def fetch_schemas(engine: Engine) -> list[str]:
-    try:
-        inspector = inspect(engine)
-        return inspector.get_schema_names()
-
-    except Exception:
-        raise
-
-
-def table_list(engine: Engine, schema: str) -> list[str]:
-    try:
-        inspector = inspect(engine)
-        return inspector.get_table_names(schema)
-
-    except Exception:
-        raise
+@dataclass
+class ConnectionArgs:
+    host: str = "127.0.0.1"
+    username: str | None = None
+    password: str | None = None
+    port: int | None = None
+    database: str | None = None
+    query: ConnectionQuery = field(default_factory=immutabledict[Any, Any])
 
 
-def table_from_meta(engine: Engine, schema: str, table: str) -> Table:
-    meta_obj = MetaData()
-    return Table(table, meta_obj, schema=schema, autoload_with=engine)
+class DbConnection:
+    def __init__(self, connection_args: ConnectionArgs) -> None:
+        self.connection_args = connection_args
+
+        self._schemas = []
+        self._tables = []
+
+    @property
+    def schemas(self) -> list[str]:
+        return self._schemas
+
+    @property
+    def tables(self) -> list[str]:
+        return self._tables
