@@ -1,8 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Mapping, Sequence, TypeAlias
-
-from sqlalchemy.util import immutabledict
+from typing import Mapping, Sequence, TypeAlias
 
 
 class ConnectionPrefix(str, Enum):
@@ -14,12 +12,12 @@ ConnectionQuery: TypeAlias = Mapping[str, str | Sequence[str]]
 
 @dataclass
 class ConnectionArgs:
+    database: str
     host: str = "127.0.0.1"
     username: str | None = None
     password: str | None = None
     port: int | None = None
-    database: str | None = None
-    query: ConnectionQuery = field(default_factory=immutabledict[Any, Any])
+    query: ConnectionQuery | None = None
 
 
 class DbConnection:
